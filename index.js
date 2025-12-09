@@ -1,27 +1,27 @@
-const axios = require("axios");
+// index.js
+// Simple “app” that just does a light network call
 
-// ---- Malicious IPs/domains for Garnet detection ----
-const maliciousHosts = [
-  "http://45.67.230.99",
-  "http://185.244.25.10",
-  "http://91.212.150.113",
-  "http://malicious-update-server.com",
-  "http://command-control-botnet.net"
-];
+const https = require('https');
 
-async function testConnections() {
-  console.log("Starting outbound tests...");
+function ping() {
+  return new Promise((resolve) => {
+    const req = https.get('https://www.garnet.ai', (res) => {
+      res.on('data', () => {});
+      res.on('end', () => {
+        console.log('Pinged garnet.ai with status:', res.statusCode);
+        resolve();
+      });
+    });
 
-  for (const host of maliciousHosts) {
-    try {
-      console.log("Attempting connection to:", host);
-      await axios.get(host, { timeout: 2000 });
-    } catch (err) {
-      console.log("Blocked or unreachable (expected):", host);
-    }
-  }
-
-  console.log("Finished outbound attempts.");
+    req.on('error', (err) => {
+      console.error('Ping error:', err.message);
+      resolve();
+    });
+  });
 }
 
-testConnections();
+(async () => {
+  console.log('Running basic app ping...');
+  await ping();
+  console.log('Done.');
+})();
