@@ -6,9 +6,6 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "ua-parser-js": "0.7.33",
-    "event-source-polyfill": "1.0.31",
-    "postinstall-build": "0.4.1",
-    "flatmap-stream": "0.1.1"
+    "axios": "1.6.7"
   }
 }
