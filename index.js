@@ -1,15 +1,19 @@
-const fetch = require('node-fetch');
-const shell = require('shelljs');
-const minimist = require('minimist');
-const parser = require('ua-parser-js');
+const https = require("https");
 
-console.log("Garnet Lab App running...");
+const maliciousTargets = [
+  "https://203.0.113.10",
+  "https://198.51.100.5",
+  "https://example-malware.test",
+  "https://malicious.test"
+];
 
-// harmless fetch call (Garnet monitors egress)
-fetch("https://example.com").then(() => console.log("Fetch completed"));
+console.log("🔴 Simulating malicious activity…");
 
-// shelljs attempt (Garnet catches shell execution)
-shell.exec("echo test-shell-exec");
+maliciousTargets.forEach(target => {
+  https.get(target, res => {
+    console.log(`Attempted connection to: ${target} → Status: ${res.statusCode}`);
+  }).on("error", err => {
+    console.log(`Blocked or failed connection to: ${target}`);
+  });
+});
 
-// parse UA (benign behavior)
-console.log(parser("Mozilla/5.0"));
