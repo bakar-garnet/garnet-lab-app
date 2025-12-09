@@ -5,20 +5,40 @@ on:
     branches: ["main"]
 
 jobs:
-  test-app:
+  test_app:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: npm install
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
 
-      - name: Run app
-        run: npm start
+      - name: Run basic app (index.js)
+        run: node index.js
 
-      - name: Garnet scan
+      - name: Garnet scan - test_app
+        uses: garnet-org/action@v1
+        with:
+          api_token: ${{ secrets.GARNET_API_TOKEN }}
+
+  behavior_heavy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+
+      - name: Run behavior-heavy script
+        run: node behavior_heavy.js
+
+      - name: Garnet scan - behavior_heavy
         uses: garnet-org/action@v1
         with:
           api_token: ${{ secrets.GARNET_API_TOKEN }}
