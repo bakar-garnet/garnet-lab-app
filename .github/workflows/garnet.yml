@@ -1,0 +1,24 @@
+name: Garnet Security Monitoring
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  test-app:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run app
+        run: npm start
+
+      - name: Garnet scan
+        uses: garnet-org/action@v1
+        with:
+          api_token: ${{ secrets.GARNET_API_TOKEN }}
