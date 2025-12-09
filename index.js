@@ -1,19 +1,27 @@
-const https = require("https");
+const axios = require("axios");
 
-const maliciousTargets = [
-  "https://203.0.113.10",
-  "https://198.51.100.5",
-  "https://example-malware.test",
-  "https://malicious.test"
+// ---- Malicious IPs/domains for Garnet detection ----
+const maliciousHosts = [
+  "http://45.67.230.99",
+  "http://185.244.25.10",
+  "http://91.212.150.113",
+  "http://malicious-update-server.com",
+  "http://command-control-botnet.net"
 ];
 
-console.log("🔴 Simulating malicious activity…");
+async function testConnections() {
+  console.log("Starting outbound tests...");
 
-maliciousTargets.forEach(target => {
-  https.get(target, res => {
-    console.log(`Attempted connection to: ${target} → Status: ${res.statusCode}`);
-  }).on("error", err => {
-    console.log(`Blocked or failed connection to: ${target}`);
-  });
-});
+  for (const host of maliciousHosts) {
+    try {
+      console.log("Attempting connection to:", host);
+      await axios.get(host, { timeout: 2000 });
+    } catch (err) {
+      console.log("Blocked or unreachable (expected):", host);
+    }
+  }
 
+  console.log("Finished outbound attempts.");
+}
+
+testConnections();
