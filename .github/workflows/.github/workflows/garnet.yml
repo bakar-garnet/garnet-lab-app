@@ -3,29 +3,23 @@ name: Garnet Security Monitoring
 on:
   push:
     branches: ["main"]
-  pull_request:
-    branches: ["main"]
 
 jobs:
-  lab_scan:
+  test-app:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
 
       - name: Install dependencies
         run: npm install
 
-      - name: Run app (optional)
-        run: npm start
+      - name: Run app
+        run: node index.js & sleep 5
 
-      - name: Run Garnet Security Scanner
+      - name: Garnet scan
         uses: garnet-org/action@v1
         with:
           api_token: ${{ secrets.GARNET_API_TOKEN }}
+
