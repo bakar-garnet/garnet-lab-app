@@ -1,6 +1,3 @@
-// index.js
-// Simple “app” that just does a light network call
-
 const https = require('https');
 
 function ping() {
@@ -13,10 +10,7 @@ function ping() {
       });
     });
 
-    req.on('error', (err) => {
-      console.error('Ping error:', err.message);
-      resolve();
-    });
+    req.on('error', () => resolve());
   });
 }
 
