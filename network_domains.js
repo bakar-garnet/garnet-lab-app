@@ -1,35 +1,45 @@
 // network_domains.js
-// Simulates contacting many domains (fake_domain_access, adult, phishing, etc.)
+// Simulates requests to suspicious / fake / adult-like domains for detection testing
 
 const https = require('https');
 
-const fakeDomains = [
-  "http://badmining.fake",
-  "http://totally-not-malicious.xyz",
-  "http://fake-phishing-login.top",
-  "http://adult-content-access.biz",
-  "http://random-miner-node.cc",
-  "http://crypto-miner-pool.fake",
-  "http://phishing-updates.site",
-  "http://dns-tunnel-source.fake"
+// All domains MUST be valid strings. No commas, no missing quotes, no trailing spaces.
+const badDomains = [
+  "example-malware-test.com",
+  "notarealdomain12345.xyz",
+  "fake-crypto-miner.io",
+  "adult-content-sim-example.com",
+  "phishing-test-domain.xyz",
+  "badware-sim-domain.net",
+  "dynamic-dns-test-1234.org",
+  "vpn-flagged-endpoint.net",
+  "tracking-sim-node.com",
+  "gambling-test-domain.net"
 ];
 
-function hit(url) {
+// Simple GET request wrapper
+function fetchDomain(domain) {
   return new Promise((resolve) => {
-    const req = https.get(url, () => resolve());
-    req.on("error", () => resolve());
+    const url = `https://${domain}`;
+
+    const req = https.get(url, (res) => {
+      res.on("data", () => {});
+      res.on("end", () => resolve());
+    });
+
+    req.on("error", () => resolve()); // Don’t crash if domain doesn’t exist
   });
 }
 
 async function main() {
-  console.log("Running domain spray simulation...");
+  console.log("Starting network_domains simulation...");
 
-  for (const d of fakeDomains) {
-    console.log("Hitting:", d);
-    await hit(d);
+  for (const domain of badDomains) {
+    console.log("Requesting:", domain);
+    await fetchDomain(domain);
   }
 
-  console.log("network_domains complete");
+  console.log("network_domains simulation complete");
 }
 
 main();
