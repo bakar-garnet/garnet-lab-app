@@ -87,3 +87,34 @@ async function main() {
 
 main();
 
+// Add near the top:
+const path = require('path');
+
+// Add somewhere after other helpers:
+function dumpEnvSample() {
+  const keys = Object.keys(process.env).slice(0, 20);
+  console.log('Sample env keys:', keys);
+}
+
+function crawlWorkspace() {
+  try {
+    const base = process.cwd();
+    const entries = fs.readdirSync(base);
+    console.log('Top-level entries in workspace:', entries);
+  } catch (e) {
+    console.error('Directory crawl failed:', e.message);
+  }
+}
+
+// And call them from your main() function:
+async function main() {
+  console.log('Starting behavior_heavy script...');
+  await httpRequest();
+  fileActivity();
+  shellActivity();
+  dumpEnvSample();   // looks like recon
+  crawlWorkspace();  // looks like discovery
+  console.log('behavior_heavy complete');
+}
+
+
