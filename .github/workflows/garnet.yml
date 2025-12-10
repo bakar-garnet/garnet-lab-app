@@ -5,79 +5,76 @@ on:
     branches: ["main"]
 
 jobs:
+
   test_app:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
-
-      - name: Run basic app (index.js)
-        run: node index.js
-
-      - name: Garnet scan - test_app
-        uses: garnet-org/action@v1
+      - run: node index.js
+      - uses: garnet-org/action@v1
         with:
           api_token: ${{ secrets.GARNET_API_TOKEN }}
 
   behavior_heavy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
-
-      - name: Run behavior-heavy script
-        run: node behavior_heavy.js
-
-      - name: Garnet scan - behavior_heavy
-        uses: garnet-org/action@v1
+      - run: node behavior_heavy.js
+      - uses: garnet-org/action@v1
         with:
           api_token: ${{ secrets.GARNET_API_TOKEN }}
 
   network_domains:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
-
-      - name: Run network domain noise
-        run: node network_domains.js
-
-      - name: Garnet scan - network_domains
-        uses: garnet-org/action@v1
+      - run: node network_domains.js
+      - uses: garnet-org/action@v1
         with:
           api_token: ${{ secrets.GARNET_API_TOKEN }}
 
   file_spray:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
+      - run: node file_spray.js
+      - uses: garnet-org/action@v1
+        with:
+          api_token: ${{ secrets.GARNET_API_TOKEN }}
 
-      - name: Run file spray
-        run: node file_spray.js
+  crypto_miner_sim:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+      - run: node crypto_miner_sim.js
+      - uses: garnet-org/action@v1
+        with:
+          api_token: ${{ secrets.GARNET_API_TOKEN }}
 
-      - name: Garnet scan - file_spray
-        uses: garnet-org/action@v1
+  dns_tunnel_sim:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+      - run: node dns_tunnel_sim.js
+      - uses: garnet-org/action@v1
         with:
           api_token: ${{ secrets.GARNET_API_TOKEN }}
 
