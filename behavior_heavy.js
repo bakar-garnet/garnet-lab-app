@@ -1,101 +1,60 @@
 // behavior_heavy.js
-// Simulates suspicious behavior safely for Garnet detection testing.
+// Generates network, file, shell, and recon-like activity without extra npm packages
 
 const fs = require('fs');
-const path = require('path');
-const net = require('net');
-const https = require('https');
 const { execSync } = require('child_process');
+const https = require('https');
+const path = require('path');
 
-// 1. NETWORK: benign HTTPS request
+// --- Network: simple HTTPS request ---
 function httpRequest() {
   return new Promise((resolve) => {
     const req = https.get('https://example.com', (res) => {
-      res.on('data', () => {});
+      res.on('data', () => {}); // drain data, we don't care about body
       res.on('end', () => resolve());
     });
 
-    req.on('error', () => resolve());
+    req.on('error', (err) => {
+      console.error('HTTP error:', err.message);
+      // Don't fail the job just because the network call failed
+      resolve();
+    });
   });
 }
 
-// 2. ENV ENUMERATION
-function dumpEnv() {
-  const keys = Object.keys(process.env).slice(0, 20);
-  console.log('Sample env keys:', keys);
-}
-
-// 3. DIRECTORY CRAWLING
-function crawlHome() {
-  try {
-    const home = process.env.HOME || '/home/runner';
-    const entries = fs.readdirSync(home).slice(0, 20);
-    console.log('Home entries sample:', entries);
-  } catch {}
-}
-
-// 4. FILE ACTIVITY
+// --- File activity: write -> read -> delete ---
 function fileActivity() {
-  const file = 'tmp-garnet-behavior.txt';
-  fs.writeFileSync(file, 'test ' + Date.now());
-  fs.readFileSync(file, 'utf8');
-  fs.unlinkSync(file);
-}
+  const filePath = path.join(process.cwd(), 'tmp-garnet-behavior.txt');
 
-// 5. FAKE “BAD IP” CONNECTION ATTEMPT (TEST-NET RANGE)
-function attemptBadIpConnect() {
-  const socket = net.connect(80, '198.51.100.42'); // Reserved test IP
-  socket.on('error', () => {}); // Expected
-}
-
-// 6. SHELL ACTIVITY
-function shellActivity() {
   try {
-    execSync('uname -a || whoami', { stdio: 'ignore' });
-  } catch {}
-}
-
-// 7. CPU LOOP
-function busyLoop() {
-  const start = Date.now();
-  while (Date.now() - start < 500) {} // spin for 0.5s
-}
-
-// 8. MULTIPLE CHILD PROCESSES
-function spawnChildren() {
-  for (let i = 0; i < 3; i++) {
-    try {
-      execSync(`echo child-${i}`, { stdio: 'ignore' });
-    } catch {}
+    fs.writeFileSync(filePath, 'behavior test ' + Date.now());
+    const contents = fs.readFileSync(filePath, 'utf8');
+    console.log('Read back file contents (trimmed):', contents.slice(0, 50));
+    fs.unlinkSync(filePath);
+    console.log('Temp file removed:', filePath);
+  } catch (e) {
+    console.error('File activity failed (non-fatal):', e.message);
   }
 }
 
-async function main() {
-  console.log('Starting behavior_heavy simulation...');
-
-  await httpRequest();
-  dumpEnv();
-  crawlHome();
-  fileActivity();
-  attemptBadIpConnect();
-  shellActivity();
-  busyLoop();
-  spawnChildren();
-
-  console.log('Completed behavior_heavy');
+// --- Shell activity: spawn a simple command ---
+function shellActivity() {
+  try {
+    // Harmless commands, but they still spawn a shell / process tree
+    execSync('uname -a || whoami', { stdio: 'ignore' });
+    console.log('Shell command executed (uname / whoami).');
+  } catch (e) {
+    console.error('Shell command failed (non-fatal):', e.message);
+  }
 }
 
-main();
-
-// Add near the top:
-const path = require('path');
-
-// Add somewhere after other helpers:
+// --- Recon-ish: env / “secrets” enumeration sample ---
 function dumpEnvSample() {
   const keys = Object.keys(process.env).slice(0, 20);
   console.log('Sample env keys:', keys);
 }
 
+// --- Discovery-ish: crawl the workspace directory ---
 function crawlWorkspace() {
   try {
     const base = process.cwd();
@@ -106,15 +65,18 @@ function crawlWorkspace() {
   }
 }
 
-// And call them from your main() function:
+// --- Main driver ---
 async function main() {
   console.log('Starting behavior_heavy script...');
-  await httpRequest();
-  fileActivity();
-  shellActivity();
-  dumpEnvSample();   // looks like recon
-  crawlWorkspace();  // looks like discovery
+
+  await httpRequest();   // network
+  fileActivity();        // file write / read / delete
+  shellActivity();       // spawn shell / process
+  dumpEnvSample();       // looks like env / secrets recon
+  crawlWorkspace();      // looks like directory discovery
+
   console.log('behavior_heavy complete');
 }
 
+main();
 
