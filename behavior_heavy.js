@@ -1,79 +1,41 @@
-//
-// behavior_heavy.js
-// Generates network, file, shell, recon, and directory enumeration
-//
+const fs = require("fs");
+const path = require("path");
+const https = require("https");
+const { execSync } = require("child_process");
 
-const fs = require('fs');
-const https = require('https');
-const { execSync } = require('child_process');
-const path = require('path');
-
-// ---------------------
-// Network activity
-// ---------------------
-function httpRequest() {
+function safeGet() {
   return new Promise((resolve) => {
-    const req = https.get('https://example.com', (res) => {
-      res.on('data', () => {});
-      res.on('end', resolve);
-    });
-    req.on('error', () => resolve());
+    https.get("https://example.com", (res) => {
+      res.on("data", () => {});
+      res.on("end", resolve);
+    }).on("error", resolve);
   });
 }
 
-// ---------------------
-// File write → read → delete
-// ---------------------
-function fileActivity() {
-  const p = 'tmp-behavior.txt';
-  fs.writeFileSync(p, 'behavior test ' + Date.now());
-  fs.readFileSync(p, 'utf8');
+function fileOps() {
+  const p = path.join(process.cwd(), "tmp_behavior.txt");
+  fs.writeFileSync(p, "behavior test\n");
+  fs.readFileSync(p);
   fs.unlinkSync(p);
 }
 
-// ---------------------
-// Spawn shell process
-// ---------------------
-function shellActivity() {
+function shellOps() {
   try {
-    execSync('uname -a || whoami', { stdio: 'ignore' });
+    execSync("whoami || uname -a", { stdio: "ignore" });
   } catch {}
 }
 
-// ---------------------
-// Environment key dump
-// ---------------------
-function dumpEnvSample() {
-  const keys = Object.keys(process.env).slice(0, 20);
-  console.log('Environment keys:', keys);
+function envRecon() {
+  console.log("env sample:", Object.keys(process.env).slice(0, 15));
 }
 
-// ---------------------
-// Directory enumeration
-// ---------------------
-function crawlWorkspace() {
-  try {
-    const base = process.cwd();
-    const entries = fs.readdirSync(base);
-    console.log('Workspace files:', entries);
-  } catch (e) {
-    console.error('Directory crawl failed:', e.message);
-  }
-}
+(async () => {
+  console.log("behavior_heavy: start");
+  await safeGet();
+  fileOps();
+  shellOps();
+  envRecon();
+  console.log("behavior_heavy: complete");
+  process.exit(0);
+})();
 
-// ---------------------
-// Main
-// ---------------------
-async function main() {
-  console.log('Starting behavior_heavy...');
-
-  await httpRequest();  
-  fileActivity();        
-  shellActivity();        
-  dumpEnvSample();        
-  crawlWorkspace();       
-
-  console.log('behavior_heavy complete');
-}
-
-main();
