@@ -1,21 +1,18 @@
-const https = require('https');
+const https = require("https");
 
-function ping() {
+function get(url) {
   return new Promise((resolve) => {
-    const req = https.get('https://www.garnet.ai', (res) => {
-      res.on('data', () => {});
-      res.on('end', () => {
-        console.log('Pinged garnet.ai with status:', res.statusCode);
-        resolve();
-      });
+    const req = https.get(url, (res) => {
+      res.on("data", () => {});
+      res.on("end", () => resolve(res.statusCode));
     });
-
-    req.on('error', () => resolve());
+    req.on("error", () => resolve(null));
   });
 }
 
 (async () => {
-  console.log('Running basic app ping...');
-  await ping();
-  console.log('Done.');
+  console.log("test_app: starting");
+  await get("https://example.com");
+  console.log("test_app: done");
+  process.exit(0);
 })();
