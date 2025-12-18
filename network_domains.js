@@ -1,46 +1,38 @@
-// network_domains.js
-// Simulates requests to suspicious / fake / adult-like domains for detection testing
+const fs = require("fs");
+const https = require("https");
 
-const https = require('https');
+const CONTROLLED = "https://example.com";
 
-// All domains MUST be valid strings. No commas, no missing quotes, no trailing spaces.
-const badDomains = [
-  "example-malware-test.com",
-  "notarealdomain12345.xyz",
-  "fake-crypto-miner.io",
-  "adult-content-sim-example.com",
-  "phishing-test-domain.xyz",
-  "badware-sim-domain.net",
-  "dynamic-dns-test-1234.org",
-  "vpn-flagged-endpoint.net",
-  "tracking-sim-node.com",
-  "gambling-test-domain.net"
-];
+const indicators = fs
+  .readFileSync("blocklist.txt", "utf8")
+  .split("\n")
+  .map((l) => l.trim())
+  .filter(Boolean);
 
-// Simple GET request wrapper
-function fetchDomain(domain) {
+function hit(indicator, n) {
+  const url = `${CONTROLLED}/?blocked=${encodeURIComponent(indicator)}&n=${n}`;
   return new Promise((resolve) => {
-    const url = `https://${domain}`;
-
-    const req = https.get(url, (res) => {
+    https.get(url, (res) => {
       res.on("data", () => {});
-      res.on("end", () => resolve());
-    });
-
-    req.on("error", () => resolve()); // Don’t crash if domain doesn’t exist
+      res.on("end", resolve);
+    }).on("error", resolve);
   });
 }
 
-async function main() {
-  console.log("Starting network_domains simulation...");
+(async () => {
+  console.log("network_domains: simulating blocklisted domains");
+  let count = 0;
 
-  for (const domain of badDomains) {
-    console.log("Requesting:", domain);
-    await fetchDomain(domain);
+  for (const d of indicators) {
+    for (let i = 0; i < 3; i++) {
+      await hit(d, i);
+      await new Promise((r) => setTimeout(r, 120));
+      count++;
+    }
   }
 
-  console.log("network_domains simulation complete");
-}
+  console.log("network_domains: complete hits =", count);
+  process.exit(0);
+})();
 
-main();
 
