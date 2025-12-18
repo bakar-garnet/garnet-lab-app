@@ -1,17 +1,22 @@
-// file_spray.js
-// Creates lots of file access events
+const fs = require("fs");
+const path = require("path");
 
-const fs = require('fs');
+(async () => {
+  console.log("file_spray: start");
+  const dir = path.join(process.cwd(), "spray_tmp");
+  fs.mkdirSync(dir, { recursive: true });
 
-function spray() {
-  for (let i = 0; i < 15; i++) {
-    const p = `tmp-file-${i}.txt`;
-    fs.writeFileSync(p, 'spray ' + i);
-    fs.readFileSync(p, 'utf8');
-    fs.unlinkSync(p);
+  for (let i = 0; i < 25; i++) {
+    const f = path.join(dir, `f_${i}.txt`);
+    fs.writeFileSync(f, `spray ${i}`);
+    fs.readFileSync(f);
   }
-}
 
-console.log("Running file spray...");
-spray();
-console.log("file_spray complete");
+  for (let i = 0; i < 25; i++) {
+    fs.unlinkSync(path.join(dir, `f_${i}.txt`));
+  }
+
+  fs.rmdirSync(dir);
+  console.log("file_spray: complete");
+  process.exit(0);
+})();
