@@ -1,44 +1,22 @@
-// crypto_miner_sim.js
-// Simulates crypto-mining–like behavior in a SAFE + DETECTABLE way
-
-const https = require("https");
 const crypto = require("crypto");
+const https = require("https");
 
-function fakeMiningNetworkCall() {
-  return new Promise((resolve) => {
-    https
-      .get("https://mining.example.com/ping", (res) => {
-        res.on("data", () => {}); // ignore data
-        res.on("end", resolve);
-      })
-      .on("error", (err) => {
-        console.error("Miner network error:", err.message);
-        resolve(); // Do not fail the job
-      });
-  });
-}
+(async () => {
+  console.log("crypto_miner_sim: start");
 
-function cpuStressLoop(iterations = 5_000_000) {
-  console.log("CPU mining simulation started…");
-  let hash = "";
-
-  for (let i = 0; i < iterations; i++) {
-    hash = crypto.createHash("sha256").update(hash + i).digest("hex");
+  let buf = Buffer.from("seed");
+  for (let i = 0; i < 25000; i++) {
+    buf = crypto.createHash("sha256").update(buf).digest();
   }
 
-  console.log("CPU mining simulation complete.");
-}
+  await new Promise((resolve) => {
+    https.get("https://example.com/?pool=cloud-miner", (res) => {
+      res.on("data", () => {});
+      res.on("end", resolve);
+    }).on("error", resolve);
+  });
 
-async function miningRoutine() {
-  console.log("Simulating miner activity…");
+  console.log("crypto_miner_sim: complete");
+  process.exit(0);
+})();
 
-  // Network attempt to fake mining pool
-  await fakeMiningNetworkCall();
-
-  // CPU-intensive hashing loop (mimics mining)
-  cpuStressLoop();
-
-  console.log("crypto_miner_sim complete.");
-}
-
-miningRoutine();
