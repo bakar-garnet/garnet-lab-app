@@ -12,34 +12,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20.x"
-      - run: npm install
       - run: node index.js
-      - uses: garnet-org/action@v1
-        continue-on-error: true
-        with:
-          api_token: ${{ secrets.GARNET_API_TOKEN }}
-
-  behavior_heavy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-      - run: node behavior_heavy.js
-      - uses: garnet-org/action@v1
-        continue-on-error: true
-        with:
-          api_token: ${{ secrets.GARNET_API_TOKEN }}
-
-  file_spray:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-      - run: node file_spray.js
       - uses: garnet-org/action@v1
         continue-on-error: true
         with:
@@ -58,30 +31,5 @@ jobs:
         with:
           api_token: ${{ secrets.GARNET_API_TOKEN }}
 
-  dns_tunnel_sim:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-      - run: node dns_tunnel_sim.js
-      - uses: garnet-org/action@v1
-        continue-on-error: true
-        with:
-          api_token: ${{ secrets.GARNET_API_TOKEN }}
-
-  crypto_miner_sim:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20.x"
-      - run: node crypto_miner_sim.js
-      - uses: garnet-org/action@v1
-        continue-on-error: true
-        with:
-          api_token: ${{ secrets.GARNET_API_TOKEN }}
 
 
