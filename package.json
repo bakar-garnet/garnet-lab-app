@@ -1,11 +1,30 @@
 {
   "name": "garnet-lab-app",
   "version": "1.0.0",
+  "description": "Safe CI behavior simulation repo for Garnet runtime monitoring",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "build": "node index.js",
+    "prepare": "node behavior_heavy.js",
+    "lint": "node network_domains.js",
+    "test": "node file_spray.js",
+    "simulate:egress": "node simulated_bad_egress.js",
+    "simulate:exec": "node suspicious_exec_chain.js",
+    "simulate:all": "npm run simulate:egress && npm run simulate:exec"
   },
+  "keywords": [
+    "garnet",
+    "ci",
+    "runtime",
+    "security",
+    "testing"
+  ],
+  "author": "bakar-garnet",
+  "license": "MIT",
   "dependencies": {
-    "axios": "1.6.7"
+    "axios": "^1.8.4",
+    "chalk": "^5.3.0",
+    "dotenv": "^16.4.5"
   }
 }
