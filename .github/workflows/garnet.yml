@@ -15,28 +15,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
       - name: Garnet Monitor Init
         uses: garnet-org/action@v2
         with:
           api_token: ${{ secrets.GARNET_API_TOKEN }}
 
-      - name: Install Node dependencies (with postinstall hooks)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node dependencies
         run: |
-          if [ -f package.json ]; then
+          if [ -f package-lock.json ]; then
             npm ci || npm install
+          elif [ -f package.json ]; then
+            npm install
           fi
 
       - name: Run known Node build + lint flows
@@ -44,32 +46,44 @@ jobs:
           npm run build --if-present
           npm run prepare --if-present
           npm run lint --if-present
-          npm run format --if-present
           npm test --if-present
+        continue-on-error: true
 
-      - name: Install Python deps
+      - name: Install Python dependencies
         run: |
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
           fi
-          if [ -f pyproject.toml ]; then
-            pip install .
-          fi
+        continue-on-error: true
 
-      - name: Run Python flows
+      - name: Run Python probe
         run: |
-          pytest || true
-          python -m unittest discover || true
-
-      - name: Run cargo tests
-        run: |
-          if [ -f Cargo.toml ]; then
-            cargo check || true
-            cargo test || true
+          if [ -f sympy_malware_trigger.py ]; then
+            python sympy_malware_trigger.py || true
           fi
+        continue-on-error: true
 
-      - name: Run make if present
+      - name: Run simulated suspicious egress
         run: |
-          if [ -f Makefile ]; then
-            make
-          fi
+          npm run simulate:egress || true
+        continue-on-error: true
+
+      - name: Run simulated suspicious exec chain
+        run: |
+          npm run simulate:exec || true
+        continue-on-error: true
+
+      - name: Run repo probes
+        run: |
+          node network_domains.js || true
+          node behavior_heavy.js || true
+          node chainstack_probe.js || true
+          node crypto_miner_sim.js || true
+          node dns_tunnel_sim.js || true
+          node file_spray.js || true
+        continue-on-error: true
+
+      - name: Trace summary
+        run: |
+          echo "Garnet run complete."
+          echo "Review outbound connections, process lineage, file access, and unexpected execution."
