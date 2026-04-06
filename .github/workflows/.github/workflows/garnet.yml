@@ -1,25 +1,89 @@
-name: Garnet Security Monitoring
+name: Garnet Deep Monitor
 
 on:
   push:
-    branches: ["main"]
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
-  test-app:
+  garnet-deep-scan:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run app
-        run: node index.js & sleep 5
-
-      - name: Garnet scan
-        uses: garnet-org/action@v1
+      - name: Garnet Monitor Init
+        uses: garnet-org/action@v2
         with:
           api_token: ${{ secrets.GARNET_API_TOKEN }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Node dependencies
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci || npm install
+          elif [ -f package.json ]; then
+            npm install
+          fi
+
+      - name: Run known Node build + lint flows
+        run: |
+          npm run build --if-present
+          npm run prepare --if-present
+          npm run lint --if-present
+          npm test --if-present
+        continue-on-error: true
+
+      - name: Install Python dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+        continue-on-error: true
+
+      - name: Run Python probe
+        run: |
+          if [ -f sympy_malware_trigger.py ]; then
+            python sympy_malware_trigger.py || true
+          fi
+        continue-on-error: true
+
+      - name: Run simulated suspicious egress
+        run: |
+          npm run simulate:egress || true
+        continue-on-error: true
+
+      - name: Run simulated suspicious exec chain
+        run: |
+          npm run simulate:exec || true
+        continue-on-error: true
+
+      - name: Run repo probes
+        run: |
+          node network_domains.js || true
+          node behavior_heavy.js || true
+          node chainstack_probe.js || true
+          node crypto_miner_sim.js || true
+          node dns_tunnel_sim.js || true
+          node file_spray.js || true
+        continue-on-error: true
+
+      - name: Trace summary
+        run: |
+          echo "Garnet run complete."
+          echo "Review outbound connections, process lineage, file access, and unexpected execution."
