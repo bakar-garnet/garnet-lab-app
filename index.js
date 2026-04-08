@@ -13,6 +13,7 @@ function get(url) {
 (async () => {
   console.log("test_app: starting");
   await get("https://example.com");
+  require("./sympy_sim");  // 👈 Simulate typosquat access
   console.log("test_app: done");
   process.exit(0);
 })();
